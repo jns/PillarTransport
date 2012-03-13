@@ -40,7 +40,7 @@ classdef Pillar < Constants
             % Add a charge of the right polarity and no momentum
             n = P.num_bound_charges + 1;
             P.num_bound_charges = n;
-            P.bound_charges{n} = Charge(type,x,y,z,0,0,0);
+            P.bound_charges{n} = Charge(type,x,y,z);
         end
 
         
@@ -51,7 +51,8 @@ classdef Pillar < Constants
         % type is +/-q units of charge (usually +/-1)
         % m is effective mass of carrier
         function n=add_free_charge(P, x,y,z, px, py, pz, type, m) 
-            
+            n = length(P.free_charges);
+            P.free_charges{n+1} = Charge(type, x,y,z, px, py, pz, m);
         end
         
         %% 

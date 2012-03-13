@@ -13,9 +13,9 @@ efield_R = zeros(1, N_points);
 for n=1:N_samples
     fprintf(1,'Iteration %i\n', n);
     p = n_core_p_shell(100*1e-9, 1e16, 150*1e-9, 1e16, 30*1e-9);
-    E = shots_through_pillar(p, N_random, N_points);
-    efield_Z = efield_Z + sum(E.fieldZ, 1)/N_random;
-    efield_R = efield_R + sum(E.fieldR, 1)/N_random;
+    E = shots_through_pillar(p, N_shots, N_points);
+    efield_Z = efield_Z + sum(E.fieldZ, 1)/N_shots;
+    efield_R = efield_R + sum(E.fieldR, 1)/N_shots;
 end
 plot(E.points*1e9, efield_Z/N_samples, E.points*1e9, efield_R/N_samples, 'linewidth', 3); 
 legend('Z', 'R');
