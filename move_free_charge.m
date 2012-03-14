@@ -12,6 +12,10 @@ output.z = zeros(n_charges, num_steps);
 output.px = zeros(n_charges, num_steps);
 output.py = zeros(n_charges, num_steps);
 output.pz = zeros(n_charges, num_steps);
+output.charges = zeros(n_charges,1);
+for c = 1:n_charges
+    output.charges(c) = pillar.free_charges{c}.q;
+end
 
 for step=1:num_steps
     pillar.step_free_charges(time_step);

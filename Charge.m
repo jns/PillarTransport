@@ -3,7 +3,8 @@
 classdef Charge < Constants
     
     properties
-        q; % Charge 
+        % Charge 
+        q; 
         % Cartesian coordinates
         x; 
         y;
@@ -14,6 +15,10 @@ classdef Charge < Constants
         pz;
         % Effective mass
         m;
+        % Boolean, indicating the charge is trapped
+        trapped;
+        % The number of times this charge has crossed the z-boundary
+        z_crossings = 0;
     end
     
     methods
@@ -55,6 +60,8 @@ classdef Charge < Constants
             else
                 C.q = q;
             end
+            
+            C.trapped = 0;
         end
         
         %% 
@@ -62,6 +69,26 @@ classdef Charge < Constants
         function bool=at_position(C, x,y,z)
             bool = (C.x == x && C.y == y && C.z == z);
             
+        end
+        
+        %%
+        % Trap the charge at it's current position
+        % and set it's mometum to 0
+        function trap(C)
+            C.trapped = 1;
+            C.px = 0;
+            C.py = 0;
+            C.pz = 0;
+        end
+        
+        %%
+        % Release the charge
+        % Set it's momentum to the specified values
+        function release(C, px, py, pz)
+           C.trapped = 0;
+           C.px = px;
+           C.py = py;
+           C.pz = pz;
         end
         
         %%
@@ -97,12 +124,14 @@ classdef Charge < Constants
         % Step this charge by a distance
         % given by it's momentum and the time step t
         function step_in_time(C, t)
-            dx = t*C.px/C.m;
-            dy = t*C.py/C.m;
-            dz = t*C.pz/C.m;
-            C.x = C.x + dx;
-            C.y = C.y + dy;
-            C.z = C.z + dz;
+            if ( ~C.trapped )
+                dx = t*C.px/C.m;
+                dy = t*C.py/C.m;
+                dz = t*C.pz/C.m;
+                C.x = C.x + dx;
+                C.y = C.y + dy;
+                C.z = C.z + dz;
+            end
         end
         
         %%
@@ -110,10 +139,12 @@ classdef Charge < Constants
         % by applying a force given by the field E=[Ex, Ey, Ez] for 
         % a duration t
         function apply_field(C, E, t)
-            force = C.q*C.CHARGE_ELECTRON*E;
-            C.px = C.px + force(1)*t;
-            C.py = C.py + force(2)*t;
-            C.pz = C.pz + force(3)*t;
+            if (~C.trapped)
+                force = C.q*C.CHARGE_ELECTRON*E;
+                C.px = C.px + force(1)*t;
+                C.py = C.py + force(2)*t;
+                C.pz = C.pz + force(3)*t;
+            end
         end
     end
     

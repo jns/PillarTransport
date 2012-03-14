@@ -29,6 +29,34 @@ classdef Pillar < Constants
         end
         
         %%
+        % Return the volume of the pillar in cm^3
+        function v = volume(P)
+            v = pi*(P.diameter*100).^2/4*(P.height*100);
+        end
+        
+        %%
+        % Return the number of holes in the pillar
+        function n=hole_count(P)
+           n = 0;
+           for c=1:length(P.free_charges)
+              if (P.free_charges{c}.q > 0)
+                  n = n + 1;
+              end
+           end
+        end
+        
+        %%
+        % Return the number of electrons in the pillar
+        function n=electron_count(P)
+            n = 0;
+            for c=1:length(P.free_charges)
+                if P.free_charges{c}.q < 0
+                    n = n + 1;
+                end
+            end
+        end
+        
+        %%
         % Add a bound charge to the pillar
         % at point x, y, z 
         % type is +/-Z where Z is units of electron charge
@@ -151,15 +179,58 @@ classdef Pillar < Constants
             end
         end
         
+        %% 
+        % Apply the boundary conditions to the charge
+        %
+        function apply_boundary_conditions(P, charge)
+           
+            % If the charge has encountered the surface, then trap it.
+            charge_r = sqrt(charge.x^2 + charge.y^2);
+            if (charge_r >= P.diameter/2)
+                charge.trap
+            end
+            
+           % If the charge has crossed the z-boundary,
+           % re-enter from the other side.
+           if (charge.z > P.height)
+               charge.z = charge.z - P.height;
+               charge.z_crossings =+ 1;
+           end
+           
+           if (charge.z < 0)
+               charge.z = charge.z + P.height;
+               charge.z_crossings =- 1;
+           end
+        end
+        
         %%
         % apply the field to the charge for a duration
         % then step the charge in the direction of it's momentum
         function step_free_charges(P,dt)
             for c=1:length(P.free_charges)
                 charge = P.free_charges{c};
+                if (charge.trapped)
+                    % if charge is trapped, calculate a probability of
+                    % releasing it.
+                    num = random('unif', 0, 1);
+                    if (0.9 < num)
+                        % give it some random amount of energy up to 26meV
+                        energy = P.ev_to_joules(random('unif', 0, 0.026));
+                        p = sqrt(2*charge.m*energy);
+                        % point it towards the core.
+                        r = sqrt(charge.x^2 + charge.y^2);
+                        z = random('unif', 0, 1);
+                        x = -charge.x/r;
+                        y = -charge.y/r;
+                        p_hat = [x, y, z]/norm([x,y,z]);
+                        % release it
+                        charge.release(p*p_hat(1), p*p_hat(2), p*p_hat(3));
+                    end
+                end
                 E = P.field_at_point(charge.x, charge.y, charge.z);
                 charge.apply_field(E, dt);
                 charge.step_in_time(dt);
+                P.apply_boundary_conditions(charge);    
             end
         end
     end
