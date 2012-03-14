@@ -11,8 +11,8 @@ classdef Pillar < Constants
         % Free carriers
         free_charges = {};
         
-        % Permittivity
-        er;
+        % Pillar Material
+        material;
         
         % Pillar diameter
         diameter;
@@ -22,17 +22,17 @@ classdef Pillar < Constants
     end
     
     methods
-        function P = Pillar(diam, height)
-            P.er = 12.5;
+        function P = Pillar(diam, height, solid)
             P.diameter = diam;
             P.height = height;
+            P.material = solid;
         end
         
         %%
         % Add a bound charge to the pillar
         % at point x, y, z 
         % type is +/-Z where Z is units of electron charge
-        % Return number of bound charges.
+        % Return the charge.
         function n=add_bound_charge(P, x,y,z,type)
             if (P.VERBOSE > 0)
                 fprintf(1, 'Adding %i bound charge at (%0.3f, %0.3f, %0.3f)\n', type, x*1e9, y*1e9, z*1e9);
@@ -44,29 +44,51 @@ classdef Pillar < Constants
         end
 
         
+        %% 
+        % Add a negative charge to the pillar
+        % at point x, y, z 
+        % return the charge
+        function c=add_neg_charge(P, x,y,z)
+            c=P.add_bound_charge(x,y,z,-1);
+        end
+        
+        %% 
+        % Add a positive charge to the pillar 
+        % at point x,y,z
+        % return the charge
+        function c=add_pos_charge(P, x,y,z)
+            c=P.add_bound_charge(x,y,z,1);
+        end
+
+        
         %%
         % Add a free carrier to the pillar
         % at point x,y,z
         % initial momentum px, py, pz
         % type is +/-q units of charge (usually +/-1)
         % m is effective mass of carrier
-        function n=add_free_charge(P, x,y,z, px, py, pz, type, m) 
+        % return the charge
+        function c=add_free_charge(P, x,y,z, px, py, pz, type, m) 
+            if (P.VERBOSE > 0)
+                fprintf(1, 'Adding %i free charge at (%0.3f, %0.3f, %0.3f)\n', type, x*1e9, y*1e9, z*1e9);
+            end
             n = length(P.free_charges);
-            P.free_charges{n+1} = Charge(type, x,y,z, px, py, pz, m);
+            c = Charge(type, x,y,z, px, py, pz, m);
+            P.free_charges{n+1} = c;
+        end
+        
+        %%
+        % Add an electron as a free charge with effective mass
+        % for pillar material
+        function c=add_electron(P, x,y,z, px,py,pz)
+            c = P.add_free_charge(x,y,z, px,py,pz, -1, P.material.eff_mass_e);
         end
         
         %% 
-        % Add a negative charge to the pillar
-        % at point x, y, z 
-        function add_neg_charge(P, x,y,z)
-            P.add_bound_charge(x,y,z,-1);
-        end
-
-        %% 
-        % Add a positive charge to the pillar 
-        % at point x,y,z
-        function add_pos_charge(P, x,y,z)
-            P.add_bound_charge(x,y,z,1);
+        % Add a hole as a free charge with effective mass
+        % for pillar material
+        function c=add_hole(P, x,y,z, px, py, pz)
+            c = P.add_free_charge(x,y,z, px,py,pz, 1, P.material.eff_mass_lh);
         end
         
         %%
@@ -77,9 +99,25 @@ classdef Pillar < Constants
            E_cumulative = [0,0,0];
            for c=1:P.num_bound_charges
                charge = P.bound_charges{c};
-               e = charge.field_at(x,y,z, P.er);
+               
+               if charge.at_position(x,y,z)
+                % Ignore self charge.
+                   continue;
+               end
+               e = charge.field_at(x,y,z, P.material.relative_permittivity);
                E_cumulative = E_cumulative + e;
            end
+           
+           for c=1:length(P.free_charges)
+               charge = P.free_charges{c};
+               if charge.at_position(x,y,z)
+                % Ignore self charge.
+                   continue;
+               end
+               e = charge.field_at(x,y,z, P.material.relative_permittivity);
+               E_cumulative = E_cumulative + e; 
+           end
+           
            E = E_cumulative;
         end
            
@@ -110,6 +148,18 @@ classdef Pillar < Constants
                         Emag(n,m,p) = sqrt(E(1)^2 + E(2)^2 + E(3)^2);
                     end
                 end
+            end
+        end
+        
+        %%
+        % apply the field to the charge for a duration
+        % then step the charge in the direction of it's momentum
+        function step_free_charges(P,dt)
+            for c=1:length(P.free_charges)
+                charge = P.free_charges{c};
+                E = P.field_at_point(charge.x, charge.y, charge.z);
+                charge.apply_field(E, dt);
+                charge.step_in_time(dt);
             end
         end
     end

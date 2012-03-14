@@ -1,9 +1,10 @@
+%% Monte-Carlo simulation for average field/potential in pillar
 
 %% 
 % Create a Pillar with an n core, and a p shell
 % then sample the magnitude of the e-field in r^ and z^
 
-N_samples = 10;
+N_samples = 1;
 N_shots = 10; % Shots through pillar
 N_points = 100; % Points per shot (resolution)
 
