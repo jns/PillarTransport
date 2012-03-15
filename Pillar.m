@@ -109,14 +109,14 @@ classdef Pillar < Constants
         % Add an electron as a free charge with effective mass
         % for pillar material
         function c=add_electron(P, x,y,z, px,py,pz)
-            c = P.add_free_charge(x,y,z, px,py,pz, -1, P.material.eff_mass_e);
+            c = P.add_free_charge(x,y,z, px,py,pz, -1, P.material.eff_mass_e*P.MASS_ELECTRON);
         end
         
         %% 
         % Add a hole as a free charge with effective mass
         % for pillar material
         function c=add_hole(P, x,y,z, px, py, pz)
-            c = P.add_free_charge(x,y,z, px,py,pz, 1, P.material.eff_mass_lh);
+            c = P.add_free_charge(x,y,z, px,py,pz, 1, P.material.eff_mass_lh*P.MASS_ELECTRON);
         end
         
         %%
@@ -188,18 +188,26 @@ classdef Pillar < Constants
             charge_r = sqrt(charge.x^2 + charge.y^2);
             if (charge_r >= P.diameter/2)
                 charge.trap
+                % Place the charge back on the surface in case it overshot
+                scale = (P.diameter/2)/charge_r;
+                charge.x = charge.x*scale;
+                charge.y = charge.y*scale;
             end
             
            % If the charge has crossed the z-boundary,
            % re-enter from the other side.
            if (charge.z > P.height)
-               charge.z = charge.z - P.height;
-               charge.z_crossings =+ 1;
+               while (charge.z > P.height)
+                   charge.z = charge.z - P.height;
+               end
+               charge.z_crossings = charge.z_crossings + 1;
            end
            
            if (charge.z < 0)
-               charge.z = charge.z + P.height;
-               charge.z_crossings =- 1;
+               while (charge.z < 0)
+                   charge.z = charge.z + P.height;
+               end
+               charge.z_crossings = charge.z_crossings - 1;
            end
         end
         
@@ -207,7 +215,8 @@ classdef Pillar < Constants
         % apply the field to the charge for a duration
         % then step the charge in the direction of it's momentum
         function step_free_charges(P,dt)
-            for c=1:length(P.free_charges)
+            % Evaluate each charge in random order
+            for c=randperm(length(P.free_charges))
                 charge = P.free_charges{c};
                 if (charge.trapped)
                     % if charge is trapped, calculate a probability of
@@ -219,7 +228,7 @@ classdef Pillar < Constants
                         p = sqrt(2*charge.m*energy);
                         % point it towards the core.
                         r = sqrt(charge.x^2 + charge.y^2);
-                        z = random('unif', 0, 1);
+                        z = random('unif', -0.5, 0.5);
                         x = -charge.x/r;
                         y = -charge.y/r;
                         p_hat = [x, y, z]/norm([x,y,z]);

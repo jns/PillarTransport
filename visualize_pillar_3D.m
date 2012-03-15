@@ -1,4 +1,4 @@
-function visualize_pillar(p)
+function visualize_pillar_3D(p, output)
 
     xmin = -p.diameter/2;
     xmax = p.diameter/2;
@@ -37,4 +37,18 @@ function visualize_pillar(p)
     title('Log E-Field from ionized impurities in NP');
     colorbar;
 
+    if (2 == nargin)
+       % Also render the output
+       q_count = length(output.charges);
+       for c = 1:q_count
+          q = output.charges(c);
+          if (q < 0)
+             % Draw the electron
+             color = 'r';
+          else
+              color = 'b';
+          end
+          plot3(output.x(c,:)*1e9, output.y(c,:)*1e9, output.z(c,:)*1e9, color, 'linewidth', 2);
+       end
+    end
 end

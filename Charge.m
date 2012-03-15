@@ -28,7 +28,7 @@ classdef Charge < Constants
         % and momentum px, py, pz
         function C = Charge(q,x,y,z,px,py,pz,m)
            
-            if (7 == nargin)
+            if (8 == nargin)
                 C.m = m;
             else
                 C.m = C.MASS_ELECTRON;
@@ -109,7 +109,7 @@ classdef Charge < Constants
         % Randomize the momentum vector but set
         % the energy of the particle  equal to energy
         function momentum = randomize_momentum(C, energy)
-            p = random('unif', 0, 1, 3,1); % Get a 3 element random col. vector
+            p = random('unif', -1, 1, 3,1); % Get a 3 element random col. vector
             p_hat = p/norm(p); % normalize it.
             
             % p^2/(2m) = E (kinetic energy)
