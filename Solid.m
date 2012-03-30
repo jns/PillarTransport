@@ -1,4 +1,5 @@
-
+%%
+% Class definition for a material
 classdef Solid 
    properties
       relative_permittivity;
