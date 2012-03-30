@@ -113,6 +113,7 @@ classdef Charge < Constants
             p_hat = p/norm(p); % normalize it.
             
             % p^2/(2m) = E (kinetic energy)
+            %% TODO Determine momentum from DOS and band-structure
             p_mag = sqrt(2*C.m*energy);
             
             C.px = p_hat(1)*p_mag;
@@ -124,6 +125,11 @@ classdef Charge < Constants
         % Step this charge by a distance
         % given by it's momentum and the time step t
         function step_in_time(C, t)
+            % This is not correct!!
+            % The group velocity of the carrier must be computed from 
+            % the band structure to update it's position, because 
+            % inside the semiconductor v ~= p^2/2m
+            % Chester will fix this!!!
             if ( ~C.trapped )
                 dx = t*C.px/C.m;
                 dy = t*C.py/C.m;
@@ -139,12 +145,20 @@ classdef Charge < Constants
         % by applying a force given by the field E=[Ex, Ey, Ez] for 
         % a duration t
         function apply_field(C, E, t)
+            % Is this correct for non-parabolic dispersion??
             if (~C.trapped)
                 force = C.q*C.CHARGE_ELECTRON*E;
                 C.px = C.px + force(1)*t;
                 C.py = C.py + force(2)*t;
                 C.pz = C.pz + force(3)*t;
             end
+        end
+        
+        %% 
+        % Calculate the probability of interacting with a phonon
+        % and update energy
+        function phonon_scatter(C, dt, phonon_energy)
+           %% Chester will implement this 
         end
     end
     

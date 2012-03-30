@@ -4,7 +4,7 @@
 % Create a Pillar with an n core, and a p shell
 % then sample the magnitude of the e-field in r^ and z^
 
-N_samples = 1;
+N_samples = 10;
 N_shots = 10; % Shots through pillar
 N_points = 100; % Points per shot (resolution)
 
@@ -13,20 +13,23 @@ efield_R = zeros(1, N_points);
 
 for n=1:N_samples
     fprintf(1,'Iteration %i\n', n);
-    p = n_core_p_shell(100*1e-9, 1e16, 150*1e-9, 1e16, 30*1e-9);
+    p = n_core_p_shell(100*1e-9, 1e16, 150*1e-9, 1e16, 10*1e-9);
     E = shots_through_pillar(p, N_shots, N_points);
     efield_Z = efield_Z + sum(E.fieldZ, 1)/N_shots;
     efield_R = efield_R + sum(E.fieldR, 1)/N_shots;
 end
+clf;
+subplot(2,1,1);
 plot(E.points*1e9, efield_Z/N_samples, E.points*1e9, efield_R/N_samples, 'linewidth', 3); 
 legend('Z', 'R');
 xlabel('Radius (nm)');
 ylabel('E-Field (V/m)');
 title(sprintf('%i Iterations', N_samples));
 
-figure(2)
-clf
-plot(E.points*1e9, efield_R/N_samples.*E.points, 'linewidth', 3);
+subplot(2,1,2);
+Vr =-cumsum(efield_R/N_samples.*abs(E.points));
+Vz =-cumsum(efield_Z/N_samples.*abs(E.points));
+plot(E.points*1e9, Vr, E.points*1e9, Vz, 'linewidth', 3);
 xlabel('Radius (nm)');
 ylabel('Potential (V)');
 title(sprintf('%i Iterations', N_samples));

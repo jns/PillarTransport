@@ -1,6 +1,6 @@
 %% Measure the dynamics in a pillar
 
-N_samples = 1;
+N_samples = 10;
 T_step = 5e-14; % The time step of the simulation
 N_steps= 50; % Number of time steps to evolve
 
@@ -10,7 +10,7 @@ shell1_diam = 120*1e-9;
 shell_diam = 160*1e-9;
 height = 30*1e-9;
 Nd = 1e16;
-Na = 1e17;
+Na = 2e16;
 
 % Setup data structures for capturing electron and hole densities
 bins = linspace(0, shell_diam/2*1e9, 15);

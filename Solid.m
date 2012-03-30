@@ -5,5 +5,6 @@ classdef Solid
       eff_mass_e;
       eff_mass_hh;
       eff_mass_lh;
+      lo_phonon_energy;
    end
 end

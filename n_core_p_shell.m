@@ -16,6 +16,8 @@ shell_vol = pi*diam_shell_cm^2/4*height_cm - core_vol;
 core_charges = core_vol*n_doping;
 shell_charges = shell_vol*p_doping;
 
+net_charge = shell_charges - core_charges;
+
 % Create a pillar with outer diameter equal to the shell diameter
 p = Pillar(diam_shell, height, GaAs);
 
@@ -28,16 +30,6 @@ for c=1:ceil(core_charges)
     y1 = r1*cos(t1);
     z1 = random('unif', 0, height);
     p.add_pos_charge(x1, y1,z1);
-
-    % initialize the electron near the donor with momentum given by fermi
-    % function
-    x2 = random('normal', x1, 1e-8);
-    y2 = random('normal', y1, 1e-8);
-    z2 = random('normal', z1, 1e-8);
-    % Give it some random momentum with energy up to 26meV
-    c = p.add_electron(x2, y2, z2, 0,0,0);
-    c.randomize_momentum(p.ev_to_joules(random('uniform', 0, 0.026)));
-
 end
 
 for c=1:ceil(shell_charges)
@@ -47,16 +39,22 @@ for c=1:ceil(shell_charges)
     y1 = r1*cos(t1);
     z1 = random('unif', 0, height);
     p.add_neg_charge(x1, y1,z1);
-
-    % initialize the holes near the donor with momentum given by fermi
-    % function
-    x2 = random('normal', x1, 1e-8);
-    y2 = random('normal', y1, 1e-8);
-    z2 = random('normal', z1, 1e-8);
-    % Give it some random momentum with energy up to 26meV
-    c = p.add_hole(x2, y2, z2, 0,0,0);
-    c.randomize_momentum(p.ev_to_joules(random('uniform', 0, 0.026)));
 end
 
 
+for c=1:abs(net_charge)
+    % initialize the net charges
+    r1 = random('unif', 0, diam_shell/2);
+    t1 = random('unif', 0, 2*pi);
+    x1 = r1*sin(t1);
+    y1 = r1*cos(t1);
+    z1 = random('unif', 0, height);
+    % Give it some random momentum with energy up to 26meV
+    if (0 > net_charge)
+        c = p.add_electron(x1, y1, z1, 0,0,0);
+    else
+        c = p.add_hole(x1, y1, z1, 0, 0, 0);
+    end
+    c.randomize_momentum(p.ev_to_joules(random('uniform', 0, 0.026)));
+end
 end

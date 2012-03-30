@@ -11,7 +11,8 @@ classdef Pillar < Constants
         % Free carriers
         free_charges = {};
         
-        % Pillar Material
+        % Pillar Material (This is a bad name.  It is really of class
+        % Solid)
         material;
         
         % Pillar diameter
@@ -237,7 +238,10 @@ classdef Pillar < Constants
                     end
                 end
                 E = P.field_at_point(charge.x, charge.y, charge.z);
+                % Is the order of this correct ??? Chester will think about
+                % this too.
                 charge.apply_field(E, dt);
+                charge.phonon_scatter(dt, P.material.lo_phonon_energy);  %% Chester is going to implement this!!
                 charge.step_in_time(dt);
                 P.apply_boundary_conditions(charge);    
             end
