@@ -1,5 +1,7 @@
 %% Measure the dynamics in a pillar
 
+
+
 N_samples = 10;
 T_step = 5e-14; % The time step of the simulation
 N_steps= 50; % Number of time steps to evolve
